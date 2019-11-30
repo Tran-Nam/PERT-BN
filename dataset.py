@@ -38,6 +38,14 @@ class Task():
         self.ef = self.es + self.ed 
         self.ls = self.lf - self.ed
         self.slack = self.ls - self.es
+
+        self.cpt = {
+            '-2': gauss(self.ed-2, self.mu, self.sigma),
+            '-1': gauss(self.ed-1, self.mu, self.sigma),
+            '0': gauss(self.ed, self.mu, self.sigma),
+            '1': gauss(self.ed+1, self.mu, self.sigma),
+            '2': gauss(self.ed+2, self.mu, self.sigma)
+        }
         return self
 
 class Project():
