@@ -3,6 +3,7 @@ import pandas as pd
 import itertools
 from copy import deepcopy
 from pomegranate import *
+import config
 
 class Node():
     def __init__(self, name):
@@ -111,7 +112,7 @@ class Node():
         return self
 
 class Risk():
-    def __init__(self, n_risk=20, relation_path='risk_relate.txt', distribution_path='distribution.txt'):
+    def __init__(self, n_risk=20, relation_path=config.RELATION_RISK_PATH, distribution_path=config.DISTRIBUTION_PATH):
         self.parents = []
         self.node = []
         self.prob_list = []
