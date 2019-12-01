@@ -1,6 +1,7 @@
 import numpy as np 
 import pandas as pd 
 import itertools
+from copy import deepcopy
 from pomegranate import *
 
 class Node():
@@ -21,20 +22,40 @@ class Node():
 
     def create_cpt(self, cpt):
         n_pres = len(self.predecessor)
-        print(len(cpt), n_pres)
+        # print(len(cpt), n_pres)
         if n_pres==0:
             self.cpt = []
             return self
-        mat = list(itertools.product('10', repeat=n_pres+1))
+        # mat = list(itertools.product('10', repeat=n_pres+1))
+        # mat = [list(i) for i in mat]
+
+        #change suitable with data
+        mat = list(itertools.product('10', repeat=n_pres))
         mat = [list(i) for i in mat]
+        print(mat)
+        mat_1 = deepcopy(mat)
+        mat_0 = deepcopy(mat)
+        for i in range(len(mat_1)):
+            mat_1[i].append('1')
+        for i in range(len(mat_0)):
+            mat_0[i].append('0')
+        print(mat_1)
+        print(mat_0)
+           
+            
+        # mat_0 = [i.append('0') for i in mat]
+        mat = mat_1 + mat_0
+        print(mat)
+
         for i in range(len(mat)):
-            mat[i].append(cpt[i-1])
+            mat[i].append(cpt[i])
         self.cpt = mat
         return self 
 
     def calc_prob(self):
         n_pres = len(self.predecessor)
-        # print(self.cpt)
+        print(self.name)
+        print(self.cpt)
         node = ConditionalProbabilityTable(
             self.cpt,
             self.predecessor
@@ -53,20 +74,32 @@ class Node():
             par_state = State(self.predecessor[i], name='par_{}'.format(i))
             model.add_state(par_state)
             model.add_edge(par_state, node)
-        print('='*20)
+        # print('='*20)
         # print(model)
         model.bake()
+        print(model)
 
         mat = list(itertools.product('10', repeat=n_pres))
         mat = [list(i) for i in mat]
+        # print(mat)
         
         prob = 0
+        # print(len(mat))
+        
         for i in range(len(mat)):
-            mat[i].append('1')
+            base_mat = ['1']
             # print(mat[i])
-            prob += model.probability(mat[i])
+            # mat[i].append('1')
+            base_mat.extend(mat[i])
+            print(base_mat)
+            # print(mat[i])
+            # prob += model.probability(mat[i])
+            prob += model.probability(base_mat)
+            print(prob)
         
         self.prob = DiscreteDistribution({'1': prob, '0': 1-prob})
+        print(self.prob)
+        # input()
 
         return self
 
@@ -86,7 +119,7 @@ class Risk():
                     if node==0:
                         break
                     mat[i, node-1] = 0
-        print(self.parents)
+        # print(self.parents)
         self.order = []
         while len(self.order)!=n_risk:
             prod = np.prod(mat, axis=1)
@@ -110,6 +143,7 @@ class Risk():
         # print(self.prob_list)
 
         for idx in self.order:
+            print('='*20)
             if len(self.prob_list[idx])==2:
                 self.node[idx].set_prob(self.prob_list[idx][0])
                 # print(self.node[idx].prob)
@@ -123,6 +157,7 @@ class Risk():
                 self.node[idx].set_predecessor(predecessor)
                 print('Done set pre')
                 print(len(self.prob_list[idx]))
+                print(self.prob_list[idx])
                 self.node[idx].create_cpt(self.prob_list[idx])
                 
                 print('Done create cpt')
