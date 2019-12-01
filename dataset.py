@@ -1,6 +1,8 @@
 import numpy as np 
 import pandas as pd 
+from pomegranate import *
 from utils import *
+
 
 proj_path = '0.csv'
 
@@ -39,13 +41,26 @@ class Task():
         self.ls = self.lf - self.ed
         self.slack = self.ls - self.es
 
-        self.cpt = {
-            '-2': gauss(self.ed-2, self.mu, self.sigma),
-            '-1': gauss(self.ed-1, self.mu, self.sigma),
-            '0': gauss(self.ed, self.mu, self.sigma),
-            '1': gauss(self.ed+1, self.mu, self.sigma),
-            '2': gauss(self.ed+2, self.mu, self.sigma)
-        }
+        # self.cpt = {
+        #     '-2': gauss(self.ed-2, self.mu, self.sigma),
+        #     '-1': gauss(self.ed-1, self.mu, self.sigma),
+        #     '0': gauss(self.ed, self.mu, self.sigma),
+        #     '1': gauss(self.ed+1, self.mu, self.sigma),
+        #     '2': gauss(self.ed+2, self.mu, self.sigma)
+        # }
+
+        prob_list = [
+            gauss(self.ed-2, self.mu, self.sigma),
+            gauss(self.ed-1, self.mu, self.sigma),
+            gauss(self.ed-0, self.mu, self.sigma),
+            gauss(self.ed+1, self.mu, self.sigma),
+            gauss(self.ed+2, self.mu, self.sigma),
+        ]
+
+        self.ed_prob = []
+        for i in range(len(prob_list)):
+            self.ed_prob.append(DiscreteDistribution({'1': prob_list[i], '0': 1-prob_list[i]}))
+
         return self
 
 class Project():
@@ -137,14 +152,21 @@ class Project():
         return self 
     
     def check(self):
+        print('Time for each task: ed, es, ef, ls, lf')
         for i in range(0, len(self.id)):
             print(i, self.task[i].ed, self.task[i].es, self.task[i].ef, self.task[i].ls, self.task[i].lf)
+        print('Task in critical path')
         for i in range(0, len(self.id)):
             if self.task[i].slack == 0:
                 print(self.task[i].name)
+        print('Prob for each task')
+        for i in range(len(self.id)):
+            print('Task {}'.format(i))
+            for j in range(len(self.task[i].ed_prob)):
+                print(self.task[i].ed_prob[j].parameters)
                     
-proj = Project()
-proj.update()
-proj.check()
+# proj = Project()
+# proj.update()
+# proj.check()
 
 
