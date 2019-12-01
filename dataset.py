@@ -2,19 +2,15 @@ import numpy as np
 import pandas as pd 
 from pomegranate import *
 from utils import *
+import config
 
 
-proj_path = '0.csv'
-
-all_tasks = pd.read_csv(proj_path)
-# print(all_tasks)
-# id = list(all_tasks['Predecessor'])
-# print(id)
 
 class Task():
     def __init__(self, name, mos, opt, pes):
         self.name = name
         self.ed = mos 
+        self.ed_list = np.array([max(self.ed-2, 0), max(self.ed-1, 0), self.ed, self.ed+1, self.ed+2])
         self.opt = opt 
         self.pes = pes
         self.mu = (self.opt + 4*self.ed + self.pes) / 6
@@ -34,6 +30,10 @@ class Task():
 
     def set_lf(self, lf):
         self.lf = lf
+        return self
+
+    def set_td(self, td):
+        self.td = td 
         return self
 
     def update(self):
@@ -64,7 +64,7 @@ class Task():
         return self
 
 class Project():
-    def __init__(self, proj_path='1.csv'):
+    def __init__(self, proj_path=config.PROJECT_PATH):
         all_tasks = pd.read_csv(proj_path)
         self.id = list(all_tasks['id'])
         self.optimistic = list(all_tasks['optimistic'])
@@ -148,6 +148,13 @@ class Project():
         # update all value in task
         for i in range(len(self.id)):
             self.task[i].update()
+
+        # find critical path
+        self.critical = []
+        for i in range(len(self.id)):
+            if self.task[i].slack==0:
+                self.critical.append(i)
+        # print(self.critical)
 
         return self 
     
