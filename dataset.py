@@ -151,10 +151,15 @@ class Project():
 
         # find critical path
         self.critical = []
+        self.critical_path = []
         for i in range(len(self.id)):
             if self.task[i].slack==0:
                 self.critical.append(i)
+                self.critical_path.append(self.task[i].name)
         # print(self.critical)
+
+        # find time complete project
+        self.time_completion = self.task[-1].ef
 
         return self 
     
@@ -166,11 +171,11 @@ class Project():
         for i in range(0, len(self.id)):
             if self.task[i].slack == 0:
                 print(self.task[i].name)
-        print('Prob for each task')
-        for i in range(len(self.id)):
-            print('Task {}'.format(i))
-            for j in range(len(self.task[i].ed_prob)):
-                print(self.task[i].ed_prob[j].parameters)
+        # print('Prob for each task')
+        # for i in range(len(self.id)):
+        #     print('Task {}'.format(i))
+        #     for j in range(len(self.task[i].ed_prob)):
+        #         print(self.task[i].ed_prob[j].parameters)
                     
 # proj = Project()
 # proj.update()
