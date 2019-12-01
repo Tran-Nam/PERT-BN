@@ -9,16 +9,23 @@ class Node():
         self.name = name 
         # self.predecessor = predecessor
 
-    def set_predecessor(self, predecessor):
+    def set_predecessor(self, predecessor, prob=False):
         self.predecessor = []
         # print(predecessor)
-        for pre in predecessor:
-            self.predecessor.append(pre.prob)
+        if not prob:
+            for pre in predecessor:
+                self.predecessor.append(pre.prob)
+        else:
+            for pre in predecessor:
+                self.predecessor.append(pre)
         return self
     
     def set_prob(self, prob):
         self.prob = DiscreteDistribution({'1': prob, '0': 1-prob})
         return self
+
+    def set_cpt(self, cpt):
+        self.cpt = cpt
 
     def create_cpt(self, cpt):
         n_pres = len(self.predecessor)
@@ -32,20 +39,20 @@ class Node():
         #change suitable with data
         mat = list(itertools.product('10', repeat=n_pres))
         mat = [list(i) for i in mat]
-        print(mat)
+        # print(mat)
         mat_1 = deepcopy(mat)
         mat_0 = deepcopy(mat)
         for i in range(len(mat_1)):
             mat_1[i].append('1')
         for i in range(len(mat_0)):
             mat_0[i].append('0')
-        print(mat_1)
-        print(mat_0)
+        # print(mat_1)
+        # print(mat_0)
            
             
         # mat_0 = [i.append('0') for i in mat]
         mat = mat_1 + mat_0
-        print(mat)
+        # print(mat)
 
         for i in range(len(mat)):
             mat[i].append(cpt[i])
@@ -54,8 +61,8 @@ class Node():
 
     def calc_prob(self):
         n_pres = len(self.predecessor)
-        print(self.name)
-        print(self.cpt)
+        # print(self.name)
+        # print(self.cpt)
         node = ConditionalProbabilityTable(
             self.cpt,
             self.predecessor
@@ -77,7 +84,7 @@ class Node():
         # print('='*20)
         # print(model)
         model.bake()
-        print(model)
+        # print(model)
 
         mat = list(itertools.product('10', repeat=n_pres))
         mat = [list(i) for i in mat]
@@ -91,14 +98,14 @@ class Node():
             # print(mat[i])
             # mat[i].append('1')
             base_mat.extend(mat[i])
-            print(base_mat)
+            # print(base_mat)
             # print(mat[i])
             # prob += model.probability(mat[i])
             prob += model.probability(base_mat)
-            print(prob)
+            # print(prob)
         
         self.prob = DiscreteDistribution({'1': prob, '0': 1-prob})
-        print(self.prob)
+        # print(self.prob)
         # input()
 
         return self
@@ -143,39 +150,39 @@ class Risk():
         # print(self.prob_list)
 
         for idx in self.order:
-            print('='*20)
+            # print('='*20)
             if len(self.prob_list[idx])==2:
                 self.node[idx].set_prob(self.prob_list[idx][0])
                 # print(self.node[idx].prob)
-                print('NOT HAVE PARENT')
+                # print('NOT HAVE PARENT')
             else:
                 predecessor = []
-                print(self.parents[idx])
+                # print(self.parents[idx])
                 for j in self.parents[idx]:
                     predecessor.append(self.node[j-1])
                 
                 self.node[idx].set_predecessor(predecessor)
-                print('Done set pre')
-                print(len(self.prob_list[idx]))
-                print(self.prob_list[idx])
+                # print('Done set pre')
+                # print(len(self.prob_list[idx]))
+                # print(self.prob_list[idx])
                 self.node[idx].create_cpt(self.prob_list[idx])
                 
-                print('Done create cpt')
+                # print('Done create cpt')
 
                 self.node[idx].calc_prob()
-                print('Done calc prob')
-                print('HAVE PARENT')
-                    
-                
+                # print('Done calc prob')
+                # print('HAVE PARENT')
+    
+        # print(self.order)
 
+        # for i in range(n_risk):
+        #     print(self.node[i].name, self.node[i].prob.parameters[0])
 
-            
-        print(self.order)
-
-        for i in range(n_risk):
-            print(self.node[i].prob.parameters[0])
-
+    def get_risk_prob(self):
+        return self.node[-1].prob
 
                 
 if __name__=='__main__':
     risk = Risk()
+    a = risk.get_risk_prob()
+    print(a.parameters)
