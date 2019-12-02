@@ -1,0 +1,12 @@
+STT,id,optimistic,moslikely,pessimistic,Predecessor
+0,A,12,15,18, 
+1,B,6,9,12, 
+2,C,9,12,15,A
+3,D,6,9,18,B
+4,E,18,30,36,B
+5,F,9,12,15,A
+6,G,36,36,42,C
+7,H,42,48,54,D
+8,I,6,12,18,A
+9,J,3,6,9,H G E
+10,K,3,6,9,F J I
