@@ -25,12 +25,12 @@ CPT_R_ED = [
 
 CPT_ES_TD = [
     ['1', '1', '1', 1],
-    ['1', '0', '1', 0.7],
-    ['0', '1', '1', 0.3],
+    ['1', '0', '1', 0.5],
+    ['0', '1', '1', 0.5],
     ['0', '0', '1', 0],
     ['1', '1', '0', 0],
-    ['1', '0', '0', 0.3],
-    ['0', '1', '0', 0.7],
+    ['1', '0', '0', 0.5],
+    ['0', '1', '0', 0.5],
     ['0', '0', '0', 1],
 ]
 
@@ -73,13 +73,13 @@ for i in range(len(proj.id)):
     plt.ylim([0, 1])
     plt.xlabel('Time')
     plt.ylabel('Probability')
-    plt.title('Probability time completion for task {}'.format(i))
-    plt.savefig(os.path.join(out_fig, 'Task_{}.png'.format(i)))
+    plt.title('Probability time completion for task {}'.format(proj.id[i]))
+    plt.savefig(os.path.join(out_fig, 'Task_{}.png'.format(proj.id[i])))
     plt.close()
     plt.show()
 
 ### compute time completion for all project
-
+"""
 ############ Strategy 1: average
 proj_completion_time = np.array([0, 0, 0, 0, 0])
 proj_completion_prob = [1, 1, 1, 1, 1]
@@ -89,7 +89,7 @@ for i in range(len(proj.critical)):
     # print(proj.task[i].td)
     for j in range(len(proj_completion_prob)):
         proj_completion_prob[j] = (proj_completion_prob[j] + proj.task[i].td[j])/2
-
+"""
 ############ Strategy 2: use bayes network
 proj_completion_time_2 = np.array([0, 0, 0, 0, 0])
 proj_completion_prob_2 = [DiscreteDistribution({'1': 1, '0': 0})]*5
@@ -105,9 +105,15 @@ for i in range(len(proj.critical)):
 
 proj_completion_prob_2 = [i.parameters[0]['1'] for i in proj_completion_prob_2]
 # print(proj_completion_prob_2)
+print('='*50)
+print('INFO TASK')
+print(proj.info_task)
+print('='*50)
 print('Critical path: ', '-'.join(proj.critical_path))
 print('Time to complete project: ', proj.time_completion)
+print('='*50)
 
+"""
 fig, ax = plt.subplots(1, 2, figsize=(16, 6))
 
 ax[0].plot(proj_completion_time, proj_completion_prob)
@@ -123,11 +129,16 @@ for i in range(len(proj_completion_time)):
     ax[1].text(proj_completion_time[i], proj_completion_prob_2[i]+0.02, '{}'.format(round(100*proj_completion_prob_2[i], 2)))
 ax[1].set_ylim([0, 1])
 ax[1].set_title('Stategy 2')
+"""
+plt.plot(proj_completion_time_2, proj_completion_prob_2)
+plt.scatter(proj_completion_time_2, proj_completion_prob_2)
+for i in range(len(proj_completion_time_2)):
+    plt.text(proj_completion_time_2[i], proj_completion_prob_2[i]+0.02, '{}'.format(round(100*proj_completion_prob_2[i], 2)))
 
-
-# plt.xlabel('Time completion')
-# plt.ylabel('Probability')
-# plt.title('Probability for time completion of Project')
+plt.ylim([0, 1])
+plt.xlabel('Time completion')
+plt.ylabel('Probability')
+plt.title('Probability for time completion of Project')
 plt.savefig(os.path.join(out_fig, 'Time_completion.png'))
 
 
