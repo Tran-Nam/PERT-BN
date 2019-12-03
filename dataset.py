@@ -161,6 +161,27 @@ class Project():
         # find time complete project
         self.time_completion = self.task[-1].ef
 
+        # create dataframe all attr of each task
+        info_task = {'TASK': [], 
+            'ED': [],
+            'ES': [],
+            'EF': [],
+            'LS': [],
+            'LF': [],
+            'CRITICAL': []}
+        for i in range(0, len(self.id)):
+            info_task['TASK'].append(self.id[i])
+            info_task['ED'].append(self.task[i].ed)
+            info_task['ES'].append(self.task[i].es)
+            info_task['EF'].append(self.task[i].ef)
+            info_task['LS'].append(self.task[i].ls)
+            info_task['LF'].append(self.task[i].lf)
+            if i in self.critical:
+                info_task['CRITICAL'].append('YES')
+            else:
+                info_task['CRITICAL'].append('NO')
+        self.info_task = pd.DataFrame(info_task, columns=['TASK', 'ED', 'ES', 'EF', 'LS', 'LF', 'CRITICAL'])
+
         return self 
     
     def check(self):
