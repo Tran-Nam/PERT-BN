@@ -2,8 +2,10 @@ import numpy as np
 import pandas as pd 
 import itertools
 from copy import deepcopy
+import matplotlib.pyplot as plt
 from pomegranate import *
 import config
+
 
 class Node():
     def __init__(self, name):
@@ -112,21 +114,43 @@ class Node():
         return self
 
 class Risk():
-    def __init__(self, n_risk=20, relation_path=config.RELATION_RISK_PATH, distribution_path=config.DISTRIBUTION_PATH):
+    def __init__(self, n_risk=40, relation_path=config.RELATION_RISK_PATH, distribution_path=config.DISTRIBUTION_PATH):
         self.parents = []
         self.node = []
         self.prob_list = []
+        self.coord_x = []
+        self.coord_y = []
+        ceil_y = 4
         mat = np.ones((n_risk, n_risk)).astype('int')
         with open(relation_path, 'r') as f:
             for i in range(n_risk):
                 parent_nodes = f.readline()[:-1].split(',') ## last character is '\n'
                 parent_nodes = [int(i) for i in parent_nodes]
                 self.parents.append(parent_nodes)
+                
+                coord_x, coord_y = 0, 0
                 for node in parent_nodes:
-                    
+                    # print(node)
+                    # print(len(self.coord))
                     if node==0:
+                        # self.coord.append([i, ceil_y]) ## node base
+                        self.coord_x.append(i)
+                        self.coord_y.append(ceil_y)
                         break
                     mat[i, node-1] = 0
+
+                    coord_x += self.coord_x[node-1]
+                    coord_y += self.coord_y[node-1] - 1
+                
+                if len(self.coord_x) == i:
+                    coord_x /= len(parent_nodes)
+                    coord_y /= len(parent_nodes)
+                    self.coord_x.append(coord_x)
+                    self.coord_y.append(coord_y)
+                # print(self.coord)
+                # input()
+
+                    
         # print(self.parents)
         self.order = []
         while len(self.order)!=n_risk:
@@ -175,9 +199,37 @@ class Risk():
                 # print('HAVE PARENT')
     
         # print(self.order)
-
+        # ceil_y = np.max(self.level)
         # for i in range(n_risk):
+        #     print(len(self.coord))
+        #     print(self.coord)
+        #     # input()
+
         #     print(self.node[i].name, self.node[i].prob.parameters[0])
+        # print(self.coord)
+        # coord_x = [pt[0] for pt in self.coord]
+        # coord_y = [pt[1] for pt in self.coord]
+        fig = plt.figure(figsize=(14, 7), dpi=500)
+        plt.scatter(self.coord_x, self.coord_y)
+        for i in range(len(self.coord_x)):
+            # print(self.parents[i])
+            # input()
+            # plt.text(self.coord_x[i], self.coord_y[i], str(i))
+            dst_x = self.coord_x[i]
+            dst_y = self.coord_y[i]
+            plt.text(dst_x-0.25, dst_y+0.05, round(100*self.node[i].prob.parameters[0]['1'], 2))
+            if self.parents[i][0] == 0:
+                continue 
+            else:
+                for j in self.parents[i]:
+                    src_x = self.coord_x[j-1]
+                    src_y = self.coord_y[j-1]
+                    plt.arrow(src_x, src_y, dst_x-src_x, dst_y-src_y)
+        plt.title('Risk probability')
+        plt.axis('off')
+        plt.savefig(os.path.join(config.BASE_OUT_FIG, 'risk.png'))
+        plt.close()
+        # plt.show()
 
     def get_risk_prob(self):
         return self.node[-1].prob

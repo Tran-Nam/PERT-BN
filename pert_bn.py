@@ -43,7 +43,7 @@ proj.update()
 # proj.check()
 
 for i in range(len(proj.id)):
-    print('Processing task {} ...'.format(i))
+    # print('Processing task {} ...'.format(i))
     ed_task = proj.task[i].ed
     time_circum = [max(ed_task-2, 0), max(ed_task-1, 0), ed_task, ed_task+1, ed_task+2]
     prob_circum = []
