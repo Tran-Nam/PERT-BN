@@ -6,6 +6,7 @@ from pomegranate import *
 from bayes_net import Risk, Node
 from dataset import Project
 import config
+from utils import gauss
 
 out_fig = config.OUT_FIG
 
@@ -45,7 +46,11 @@ proj.update()
 for i in range(len(proj.id)):
     # print('Processing task {} ...'.format(i))
     ed_task = proj.task[i].ed
-    time_circum = [max(ed_task-2, 0), max(ed_task-1, 0), ed_task, ed_task+1, ed_task+2]
+    time_circum = []
+    for datum in range(-config.n_datum, config.n_datum+1):
+        # print(i)
+        time_circum.append(max(ed_task+datum, 0))
+    # time_circum = [max(ed_task-2, 0), max(ed_task-1, 0), ed_task, ed_task+1, ed_task+2] ########
     prob_circum = []
     prob_list_task = proj.task[i].ed_prob
     for j in range(len(prob_list_task)):
@@ -78,22 +83,11 @@ for i in range(len(proj.id)):
     plt.close()
     plt.show()
 
-### compute time completion for all project
-"""
-############ Strategy 1: average
-proj_completion_time = np.array([0, 0, 0, 0, 0])
-proj_completion_prob = [1, 1, 1, 1, 1]
-for i in range(len(proj.critical)):
-    # critical_path.append(proj.task[proj.critical[i]].name)
-    proj_completion_time += proj.task[i].ed_list
-    # print(proj.task[i].td)
-    for j in range(len(proj_completion_prob)):
-        proj_completion_prob[j] = (proj_completion_prob[j] + proj.task[i].td[j])/2
-"""
-############ Strategy 2: use bayes network
-proj_completion_time_2 = np.array([0, 0, 0, 0, 0])
-proj_completion_prob_2 = [DiscreteDistribution({'1': 1, '0': 0})]*5
-for i in range(len(proj.critical)):
+############ Strategy 2: use bayes network ##### WRONG!
+proj_completion_time_2 = np.zeros((2*config.n_datum+1, ))
+proj_completion_prob_2 = [DiscreteDistribution({'1': 1, '0': 0})] * (2*config.n_datum+1)
+for i in proj.critical:
+    # print(proj_completion_time_2.shape, proj.task[i])
     proj_completion_time_2 += proj.task[i].ed_list
     for j in range(len(proj_completion_prob_2)):
         prob_node = Node('node')
@@ -102,6 +96,37 @@ for i in range(len(proj.critical)):
         prob_node.set_cpt(CPT_ES_TD)
         prob_node.calc_prob()
         proj_completion_prob_2[j] = prob_node.prob
+
+########## Use literature of PERT
+####### calc mean of sigma of node total time #######
+# proj_completion_time_3 = np.zeros((2*config.n_datum+1, ))
+est_time_completion = 0
+est_mu = 0
+est_sigma = 0
+
+# est_time_completion = proj.time_completion ###????
+completion_node = Node('completion')
+for i in proj.critical:
+    est_time_completion += proj.task[i].ed
+    est_mu += proj.task[i].mu
+    est_sigma += proj.task[i].sigma**2
+est_sigma = est_sigma**0.5 ##### formula
+
+proj_completion_time_3 = []
+proj_completion_prob_3 = [DiscreteDistribution({'1': 1, '0': 0})] * (2*config.n_datum+1)
+for datum in range(-config.n_datum, config.n_datum+1):
+    proj_completion_time_3.append(est_time_completion + len(proj.critical)*datum)
+for i in range(len(proj_completion_time_3)):
+    prob_node = Node('node')
+    td_node_prob = gauss(proj_completion_time_3[i], est_mu, est_sigma)
+    print(td_node_prob)
+    td_node = DiscreteDistribution({'1': td_node_prob, '0': 1-td_node_prob})
+    prob_node.set_predecessor([td_node, total_risk_prob], prob=True)
+    prob_node.set_cpt(CPT_R_ED)
+    prob_node.calc_prob()
+    proj_completion_prob_3[i] = prob_node.prob.parameters[0]['1']
+
+
 
 proj_completion_prob_2 = [i.parameters[0]['1'] for i in proj_completion_prob_2]
 # print(proj_completion_prob_2)
@@ -130,10 +155,10 @@ for i in range(len(proj_completion_time)):
 ax[1].set_ylim([0, 1])
 ax[1].set_title('Stategy 2')
 """
-plt.plot(proj_completion_time_2, proj_completion_prob_2)
-plt.scatter(proj_completion_time_2, proj_completion_prob_2)
-for i in range(len(proj_completion_time_2)):
-    plt.text(proj_completion_time_2[i], proj_completion_prob_2[i]+0.02, '{}'.format(round(100*proj_completion_prob_2[i], 2)))
+plt.plot(proj_completion_time_3, proj_completion_prob_3)
+plt.scatter(proj_completion_time_3, proj_completion_prob_3)
+for i in range(len(proj_completion_time_3)):
+    plt.text(proj_completion_time_3[i], proj_completion_prob_3[i]+0.02, '{}'.format(round(100*proj_completion_prob_3[i], 2)))
 
 plt.ylim([0, 1])
 plt.xlabel('Time completion')
